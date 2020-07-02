@@ -1,17 +1,19 @@
 <?PHP 
 
+
 class Proxy 
 {
     public function forward()
     {
         if(!isset($_SERVER['HTTP_X_SANDBOX'])) {
-            throw new \Exception('Please set your whitelabel as a header under the key `X-sandbox`');
+//            throw new \Exception('Please set your whitelabel as a header under the key `X-sandbox`');
         }
         $URL     = $_SERVER['HTTP_X_SANDBOX'];
         $method  = $_SERVER['REQUEST_METHOD'];
         $headers = getallheaders();
-        $payload = $_REQUEST;
-        $headers = $this->flattenHeaders($headers);
+	$payload = array_keys($_REQUEST);
+	$headers = $this->flattenHeaders($headers);
+//	var_dump($URL, $method, $payload, $headers);die;
         return $this->requestProcessor($URL, $method, $payload, $headers);
     }
 
@@ -20,8 +22,9 @@ class Proxy
         $finalURL = $URL;
         if(isset($_SERVER['REQUEST_URI'])) {
             $finalURL = $URL.$_SERVER['REQUEST_URI'];
-        }
-        $curl = curl_init();
+	}
+	var_dump($payload[0], $finalURL);die;
+	$curl = curl_init();
         curl_setopt_array($curl, [
             CURLOPT_URL            => $finalURL,
             CURLOPT_RETURNTRANSFER => true,
@@ -29,7 +32,7 @@ class Proxy
             CURLOPT_ENCODING       => '',
             CURLOPT_MAXREDIRS      => 10,
             CURLOPT_TIMEOUT        => 30,
-            CURLOPT_POSTFIELDS     => json_encode($payload),
+            CURLOPT_POSTFIELDS     => $payload[0],
             CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1,
             CURLOPT_CUSTOMREQUEST  => strtoupper($method),
             CURLOPT_HTTPHEADER     => $headers,
@@ -44,9 +47,14 @@ class Proxy
         curl_close($curl);
         return $payload;
     }
+
     private function flattenHeaders($rawHeaders)
     {
         unset($rawHeaders['Host']);
+        unset($rawHeaders['X-sandbox']);
+        unset($rawHeaders['Accept-Encoding']);
+        unset($rawHeaders['Content-Length']);
+        unset($rawHeaders['Content-Type']);
         $headers = [];
         foreach($rawHeaders as $index =>  $header) {
             $headers[] = "$index: $header";
