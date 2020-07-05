@@ -62,5 +62,5 @@ class Proxy
         return $headers;
     }
 }
-
+header('Content-type: application/json');
 echo (new Proxy())->forward();
