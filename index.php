@@ -11,9 +11,8 @@ class Proxy
         $URL     = $_SERVER['HTTP_X_SANDBOX'];
         $method  = $_SERVER['REQUEST_METHOD'];
         $headers = getallheaders();
-        $payload = array_keys($_REQUEST);
+        $payload = ($_SERVER['REQUEST_METHOD'] == 'GET')? $_REQUEST : file_get_contents('php://input');
         $headers = $this->flattenHeaders($headers);
-        // var_dump($URL, $method, $payload, $headers);die;
         return $this->requestProcessor($URL, $method, $payload, $headers);
     }
 
@@ -23,8 +22,6 @@ class Proxy
         if (isset($_SERVER['REQUEST_URI'])) {
             $finalURL = $URL.$_SERVER['REQUEST_URI'];
         }
-        var_dump($payload, $finalURL);
-        die;
         $curl = curl_init();
         curl_setopt_array(
             $curl,
@@ -35,7 +32,7 @@ class Proxy
             CURLOPT_ENCODING       => '',
             CURLOPT_MAXREDIRS      => 10,
             CURLOPT_TIMEOUT        => 30,
-            CURLOPT_POSTFIELDS     => $payload[0],
+            CURLOPT_POSTFIELDS     => $payload,
             CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1,
             CURLOPT_CUSTOMREQUEST  => strtoupper($method),
             CURLOPT_HTTPHEADER     => $headers,
