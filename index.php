@@ -1,31 +1,34 @@
-<?PHP 
+<?php
 
 
-class Proxy 
+class Proxy
 {
     public function forward()
     {
-        if(!isset($_SERVER['HTTP_X_SANDBOX'])) {
+        if (!isset($_SERVER['HTTP_X_SANDBOX'])) {
 //            throw new \Exception('Please set your whitelabel as a header under the key `X-sandbox`');
         }
         $URL     = $_SERVER['HTTP_X_SANDBOX'];
         $method  = $_SERVER['REQUEST_METHOD'];
         $headers = getallheaders();
-	$payload = array_keys($_REQUEST);
-	$headers = $this->flattenHeaders($headers);
-//	var_dump($URL, $method, $payload, $headers);die;
+        $payload = array_keys($_REQUEST);
+        $headers = $this->flattenHeaders($headers);
+        // var_dump($URL, $method, $payload, $headers);die;
         return $this->requestProcessor($URL, $method, $payload, $headers);
     }
 
     private function requestProcessor($URL, $method, $payload = [], $headers = [])
     {
         $finalURL = $URL;
-        if(isset($_SERVER['REQUEST_URI'])) {
+        if (isset($_SERVER['REQUEST_URI'])) {
             $finalURL = $URL.$_SERVER['REQUEST_URI'];
-	}
-	var_dump($payload[0], $finalURL);die;
-	$curl = curl_init();
-        curl_setopt_array($curl, [
+        }
+        var_dump($payload, $finalURL);
+        die;
+        $curl = curl_init();
+        curl_setopt_array(
+            $curl,
+            [
             CURLOPT_URL            => $finalURL,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_FOLLOWLOCATION => true,
@@ -56,7 +59,7 @@ class Proxy
         unset($rawHeaders['Content-Length']);
         unset($rawHeaders['Content-Type']);
         $headers = [];
-        foreach($rawHeaders as $index =>  $header) {
+        foreach ($rawHeaders as $index =>  $header) {
             $headers[] = "$index: $header";
         }
         return $headers;
